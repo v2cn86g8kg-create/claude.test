@@ -1,0 +1,44 @@
+name: Build Sideload IPA
+
+on:
+  push:
+    branches:
+      - claude/snowboard-game-prototype-9svubb
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build unsigned .app for iOS device
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project SnowboardGame.xcodeproj \
+            -scheme SnowboardGame \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package .ipa
+        run: |
+          set -euo pipefail
+          APP_PATH="build/Build/Products/Release-iphoneos/SnowboardGame.app"
+          mkdir -p ipa/Payload
+          cp -R "$APP_PATH" ipa/Payload/
+          (cd ipa && zip -qr ../SnowboardGame.ipa Payload)
+
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SnowboardGame-ipa
+          path: SnowboardGame.ipa
+          retention-days: 14
