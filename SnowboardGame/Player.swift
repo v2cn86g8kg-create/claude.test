@@ -7,7 +7,9 @@ enum PlayerState {
 }
 
 /// The snowboarder. Owns its own physics/animation state; `GameScene` drives it each
-/// frame via `update(dt:forwardSpeed:terrain:)` and forwards taps into `attemptTrick()`.
+/// frame via `update(dt:forwardSpeed:terrain:)`. The trick-combo judging itself lives in
+/// `HUD` (it's a UI/timing concern); `playTrickAnimation` here is just the visual spin
+/// GameScene triggers once a combo step has been judged.
 final class Player: SKNode {
     private(set) var state: PlayerState = .riding
 
@@ -17,11 +19,6 @@ final class Player: SKNode {
     private(set) var worldY: CGFloat = 0
 
     private var velocityY: CGFloat = 0
-
-    /// Meters of air gained above the slope so far during the current jump.
-    private(set) var peakAirMeters: Double = 0
-    private var hasTrickedThisAir = false
-    private(set) var lastTrick: AirTrick?
 
     private let bodyNode: SKShapeNode
     private let boardNode: SKShapeNode
@@ -69,9 +66,6 @@ final class Player: SKNode {
         worldX = x
         worldY = terrain.height(atX: x)
         velocityY = 0
-        peakAirMeters = 0
-        hasTrickedThisAir = false
-        lastTrick = nil
         state = .riding
         zRotation = 0
         alpha = 1
@@ -101,9 +95,6 @@ final class Player: SKNode {
                 state = .airborne
                 let targetApex = min(extraDrop * Self.launchApexScale, Self.launchApexCap)
                 velocityY = sqrt(2 * abs(Self.gravity) * targetApex)
-                peakAirMeters = 0
-                hasTrickedThisAir = false
-                lastTrick = nil
             }
 
         case .airborne:
@@ -111,9 +102,6 @@ final class Player: SKNode {
             worldY += velocityY * CGFloat(dt)
 
             let gap = worldY - groundY
-            let gapMeters = Double(max(0, gap) / Terrain.pixelsPerMeter)
-            peakAirMeters = max(peakAirMeters, gapMeters)
-
             if gap <= 0 && velocityY < 0 {
                 worldY = groundY
                 velocityY = 0
@@ -127,19 +115,12 @@ final class Player: SKNode {
         }
     }
 
-    /// Called on a screen tap while airborne. Picks a trick tier from the current air
-    /// height and plays a matching spin/grab animation. Only the first tap per jump counts.
-    @discardableResult
-    func attemptTrick() -> AirTrick? {
-        guard state == .airborne, !hasTrickedThisAir else { return nil }
-        hasTrickedThisAir = true
-        let trick = AirTrick.forAirHeight(meters: peakAirMeters)
-        lastTrick = trick
-
+    /// Plays the spin/grab flourish for a combo step that was just judged. Purely
+    /// cosmetic - the judging itself already happened in `HUD`.
+    func playTrickAnimation(_ trick: AirTrick) {
         let spin = SKAction.rotate(byAngle: trick.rotation, duration: trick.animationDuration)
         spin.timingMode = .easeInEaseOut
         run(spin)
-        return trick
     }
 
     func crash() {

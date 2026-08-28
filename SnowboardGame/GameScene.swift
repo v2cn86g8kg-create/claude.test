@@ -5,9 +5,11 @@ import UIKit
 ///
 /// The world auto-scrolls to the right (mapped visually to "descending the mountain").
 /// The rider follows the procedurally generated slope, launches into the air off steep
-/// drops, and the player can tap anywhere on screen while airborne to pull a grab/spin
-/// trick - the trick tier depends on how much air has been gained. Riding (or landing)
-/// into an obstacle without enough clearance ends the run.
+/// drops (telegraphed beforehand by a warning rail), and the player can tap freely while
+/// airborne to run a 3-step trick combo (grab -> spin -> backflip) judged by a timing
+/// bar - land the timing to advance the combo, miss it and the combo ends (keeping
+/// whatever was already scored). Riding (or landing) into an obstacle without enough
+/// clearance ends the run.
 final class GameScene: SKScene {
     private let terrain = Terrain(phase: CGFloat.random(in: 0..<1000), obstacleSeed: UInt64.random(in: 0..<UInt64.max))
     private let player = Player()
@@ -16,12 +18,16 @@ final class GameScene: SKScene {
     private let groundNode = SKShapeNode()
 
     private var obstacleNodes: [Int: SKNode] = [:]
+    private var railNodes: [Int: SKNode] = [:]
     private var forwardSpeed: CGFloat = 260
     private var isRunning = true
     private var lastUpdateTime: TimeInterval?
+    private var runTrickScore = 0
 
-    /// Keeps the rider left-of-center so there's room to see what's coming.
-    private let cameraLead: CGFloat = -80
+    /// Keeps the rider left-of-center so there's room to see what's coming - a positive
+    /// value moves the camera's focal point *ahead* of the player in world space, which
+    /// pushes the player's on-screen position to the left of center.
+    private var cameraLeadX: CGFloat { size.width * 0.20 }
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.72, green: 0.85, blue: 0.98, alpha: 1)
@@ -46,18 +52,23 @@ final class GameScene: SKScene {
         isRunning = true
         forwardSpeed = 260
         lastUpdateTime = nil
+        runTrickScore = 0
 
         player.reset(atX: 0, terrain: terrain)
         player.position = CGPoint(x: player.worldX, y: player.worldY)
-        cam.position = CGPoint(x: player.worldX + cameraLead, y: player.worldY + size.height * 0.18)
+        cam.position = CGPoint(x: player.worldX + cameraLeadX, y: player.worldY + size.height * 0.18)
 
         hud.hideGameOver()
+        hud.resetForNewRun()
 
         for (_, node) in obstacleNodes { node.removeFromParent() }
         obstacleNodes.removeAll()
+        for (_, node) in railNodes { node.removeFromParent() }
+        railNodes.removeAll()
 
         updateGround()
         updateObstacles()
+        updateRails()
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -65,8 +76,16 @@ final class GameScene: SKScene {
             startRun()
             return
         }
-        if player.isAirborne, let trick = player.attemptTrick() {
-            hud.showTrick(trick)
+        guard player.isAirborne, let (trick, judgement) = hud.resolveComboTap() else { return }
+
+        let points = Int((Double(trick.scoreBonus) * judgement.scoreMultiplier).rounded())
+        if points > 0 {
+            runTrickScore += points
+            hud.setTrickScore(runTrickScore)
+        }
+        hud.showTrickResult(trick: trick, judgement: judgement, points: points)
+        if judgement != .fail {
+            player.playTrickAnimation(trick)
         }
     }
 
@@ -78,16 +97,30 @@ final class GameScene: SKScene {
         let distance = terrain.metersDescended(atX: player.worldX)
         forwardSpeed = min(460, 260 + CGFloat(distance) * 0.35) // gentle difficulty ramp
 
+        let wasAirborne = player.isAirborne
         player.update(dt: dt, forwardSpeed: forwardSpeed, terrain: terrain)
         player.position = CGPoint(x: player.worldX, y: player.worldY)
 
+        // Resolve collisions before touching the combo bar so a mid-air crash this frame
+        // (isAirborne flips to false here) is seen by the airborne/wasAirborne check
+        // below rather than being missed for a frame, which would leave the bar stuck.
         checkObstacleCollision()
 
-        cam.position = CGPoint(x: player.worldX + cameraLead, y: player.worldY + size.height * 0.18)
+        if player.isAirborne && !wasAirborne {
+            hud.startCombo()
+        }
+        if player.isAirborne {
+            hud.updateCombo(dt: dt)
+        } else if wasAirborne {
+            hud.endCombo()
+        }
+
+        cam.position = CGPoint(x: player.worldX + cameraLeadX, y: player.worldY + size.height * 0.18)
 
         hud.setDistance(meters: distance)
         updateGround()
         updateObstacles()
+        updateRails()
 
         if player.isCrashed {
             endRun(distanceMeters: distance)
@@ -163,5 +196,55 @@ final class GameScene: SKScene {
             addChild(node)
             obstacleNodes[obstacle.slotIndex] = node
         }
+    }
+
+    // MARK: Rail spawning (telegraphs an upcoming steep chute)
+
+    private func updateRails() {
+        let margin: CGFloat = 80
+        let left = cam.position.x - size.width / 2 - margin
+        let right = cam.position.x + size.width / 2 + margin
+        let visible = terrain.chutes(inRange: left...right)
+        let visibleSlots = Set(visible.map { $0.slotIndex })
+
+        for slot in Array(railNodes.keys) where !visibleSlots.contains(slot) {
+            railNodes[slot]?.removeFromParent()
+            railNodes.removeValue(forKey: slot)
+        }
+
+        for chute in visible where railNodes[chute.slotIndex] == nil {
+            let node = makeRailNode(for: chute)
+            addChild(node)
+            railNodes[chute.slotIndex] = node
+        }
+    }
+
+    private func makeRailNode(for chute: Chute) -> SKNode {
+        let path = CGMutablePath()
+        let step: CGFloat = 10
+        var x = chute.railStart
+        var first = true
+        while x <= chute.dropStart {
+            let y = terrain.height(atX: x) + 16 // float just above the snow surface
+            if first {
+                path.move(to: CGPoint(x: x, y: y))
+                first = false
+            } else {
+                path.addLine(to: CGPoint(x: x, y: y))
+            }
+            x += step
+        }
+
+        let rail = SKShapeNode(path: path)
+        rail.strokeColor = SKColor(red: 0.98, green: 0.82, blue: 0.15, alpha: 1)
+        rail.lineWidth = 5
+        rail.lineCap = .round
+        rail.glowWidth = 4
+        rail.zPosition = 4
+
+        let wrapper = SKNode()
+        wrapper.name = "rail"
+        wrapper.addChild(rail)
+        return wrapper
     }
 }

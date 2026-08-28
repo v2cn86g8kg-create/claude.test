@@ -1,26 +1,28 @@
 import CoreGraphics
 import Foundation
 
-/// The air tricks the player can pull off. Which one triggers on a tap depends on how
-/// much air (height above the slope) the player has gained during the current jump.
+/// The air tricks in a combo, always attempted in this order: land the grab, then the
+/// combo offers the spin, then the backflip. Each step is judged by `HUD`'s timing bar.
 enum AirTrick: CaseIterable {
     case grab
     case spin360
     case backflip
 
-    var displayName: String {
+    /// Short label shown while this step of the combo is active.
+    var shortName: String {
         switch self {
-        case .grab: return "GRAB!"
-        case .spin360: return "360 SPIN!"
-        case .backflip: return "BACKFLIP!"
+        case .grab: return "GRAB"
+        case .spin360: return "SPIN"
+        case .backflip: return "BACKFLIP"
         }
     }
 
+    /// Base score for landing this step at a Perfect timing (see `TrickJudgement`).
     var scoreBonus: Int {
         switch self {
-        case .grab: return 10
-        case .spin360: return 30
-        case .backflip: return 60
+        case .grab: return 20
+        case .spin360: return 50
+        case .backflip: return 100
         }
     }
 
@@ -40,16 +42,33 @@ enum AirTrick: CaseIterable {
         case .backflip: return 0.8
         }
     }
+}
 
-    /// Picks a trick tier from how many meters of air the player currently has.
-    static func forAirHeight(meters: Double) -> AirTrick {
-        switch meters {
-        case ..<3:
-            return .grab
-        case 3..<7:
-            return .spin360
-        default:
-            return .backflip
+/// How closely a combo-bar tap landed on the sweet spot.
+enum TrickJudgement: Equatable {
+    case perfect
+    case great
+    case good
+    case fail
+
+    var scoreMultiplier: Double {
+        switch self {
+        case .perfect: return 1.0
+        case .great: return 0.7
+        case .good: return 0.4
+        case .fail: return 0
         }
     }
+
+    var label: String {
+        switch self {
+        case .perfect: return "PERFECT!"
+        case .great: return "GREAT!"
+        case .good: return "GOOD"
+        case .fail: return "MISS"
+        }
+    }
+
+    /// Whether the combo continues to the next step after this judgement.
+    var continuesCombo: Bool { self != .fail }
 }
