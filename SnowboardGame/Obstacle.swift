@@ -10,6 +10,15 @@ enum ObstacleKind {
         case .tree: return SKColor(red: 0.16, green: 0.45, blue: 0.28, alpha: 1)
         }
     }
+
+    /// A darker outline tone for each kind (UIColor has no built-in "blend" helper,
+    /// so these are just hand-picked darker variants of `color`).
+    var strokeColor: SKColor {
+        switch self {
+        case .rock: return SKColor(red: 0.35, green: 0.35, blue: 0.38, alpha: 1)
+        case .tree: return SKColor(red: 0.08, green: 0.28, blue: 0.16, alpha: 1)
+        }
+    }
 }
 
 /// A single obstacle sitting on the slope. Generated deterministically (see
@@ -30,7 +39,7 @@ struct Obstacle {
     func makeNode() -> SKNode {
         let shape = SKShapeNode(rectOf: CGSize(width: width, height: height), cornerRadius: kind == .rock ? width * 0.3 : 3)
         shape.fillColor = kind.color
-        shape.strokeColor = kind.color.blended(withFraction: 0.3, of: .black) ?? kind.color
+        shape.strokeColor = kind.strokeColor
         shape.lineWidth = 2
         shape.position = CGPoint(x: 0, y: height / 2)
 

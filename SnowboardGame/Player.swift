@@ -121,7 +121,7 @@ final class Player: SKNode {
         lastTrick = trick
 
         let spin = SKAction.rotate(byAngle: trick.rotation, duration: trick.animationDuration)
-        spin.timingMode = .easeInOut
+        spin.timingMode = .easeInEaseOut
         run(spin)
         return trick
     }
