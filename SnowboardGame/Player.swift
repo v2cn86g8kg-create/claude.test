@@ -27,7 +27,18 @@ final class Player: SKNode {
     private let boardNode: SKShapeNode
 
     static let gravity: CGFloat = -1400 // px/s^2
-    static let launchBoost: CGFloat = 0.85
+
+    /// How far ahead (in world-x px) we peek to decide whether the ground is about to
+    /// drop away into a jump.
+    static let launchLookahead: CGFloat = 50
+    /// How much *extra* the ground has to drop over that lookahead - beyond what the
+    /// steady downhill grade alone would already account for - before it counts as a
+    /// launch-worthy lip rather than just normal descent.
+    static let launchThreshold: CGFloat = 8
+    /// Extra drop (px) -> target apex height (px) above the slope.
+    static let launchApexScale: CGFloat = 2.2
+    /// Safety cap so an unusually steep patch of terrain can't send the rider absurdly high.
+    static let launchApexCap: CGFloat = 190
 
     override init() {
         boardNode = SKShapeNode(rectOf: CGSize(width: 34, height: 6), cornerRadius: 3)
@@ -80,11 +91,16 @@ final class Player: SKNode {
             let slope = terrain.steepness(atX: worldX)
             zRotation = atan(-slope) * 0.4
 
-            // A steep-enough drop under the board means the slope is falling away
-            // faster than the rider can follow it - that's the lip of a jump.
-            if slope > 0.75 {
+            // Look a bit ahead: if the ground there is lower than a steady descent alone
+            // would put it, there's a lip coming up - launch off it. Sizing the jump off
+            // this *extra* drop (rather than the raw one) keeps the ordinary downhill
+            // grade from being mistaken for a jump on its own.
+            let aheadGroundY = terrain.height(atX: worldX + Self.launchLookahead)
+            let extraDrop = (groundY - aheadGroundY) - Terrain.baseSlope * Self.launchLookahead
+            if extraDrop > Self.launchThreshold {
                 state = .airborne
-                velocityY = slope * forwardSpeed * Self.launchBoost * 0.35
+                let targetApex = min(extraDrop * Self.launchApexScale, Self.launchApexCap)
+                velocityY = sqrt(2 * abs(Self.gravity) * targetApex)
                 peakAirMeters = 0
                 hasTrickedThisAir = false
                 lastTrick = nil
