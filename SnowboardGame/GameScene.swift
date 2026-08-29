@@ -19,15 +19,27 @@ final class GameScene: SKScene {
 
     private var obstacleNodes: [Int: SKNode] = [:]
     private var railNodes: [Int: SKNode] = [:]
-    private var forwardSpeed: CGFloat = 260
+    private var forwardSpeed: CGFloat = GameScene.baseForwardSpeed
     private var isRunning = true
     private var lastUpdateTime: TimeInterval?
     private var runTrickScore = 0
 
-    /// Keeps the rider left-of-center so there's room to see what's coming - a positive
-    /// value moves the camera's focal point *ahead* of the player in world space, which
-    /// pushes the player's on-screen position to the left of center.
-    private var cameraLeadX: CGFloat { size.width * 0.20 }
+    /// Speed floor/ceiling for the difficulty ramp - also drives how far left the rider
+    /// sits on screen (see `cameraLeadX`).
+    private static let baseForwardSpeed: CGFloat = 260
+    private static let maxForwardSpeed: CGFloat = 460
+
+    /// Keeps the rider left-of-center at low speed so there's room to see what's coming,
+    /// then eases that lead back toward zero as the rider picks up speed - like a real
+    /// snowboarder's focus point drifting toward center as they accelerate. By the time
+    /// forward speed caps out, the rider sits dead-center on screen.
+    private var cameraLeadX: CGFloat {
+        let range = Self.maxForwardSpeed - Self.baseForwardSpeed
+        let progress = range > 0 ? (forwardSpeed - Self.baseForwardSpeed) / range : 1
+        let eased = progress * progress * (3 - 2 * progress) // smoothstep
+        let maxLead = size.width * 0.20
+        return maxLead * (1 - max(0, min(1, eased)))
+    }
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.72, green: 0.85, blue: 0.98, alpha: 1)
@@ -50,7 +62,7 @@ final class GameScene: SKScene {
 
     private func startRun() {
         isRunning = true
-        forwardSpeed = 260
+        forwardSpeed = Self.baseForwardSpeed
         lastUpdateTime = nil
         runTrickScore = 0
 
@@ -84,6 +96,7 @@ final class GameScene: SKScene {
             hud.setTrickScore(runTrickScore)
         }
         hud.showTrickResult(trick: trick, judgement: judgement, points: points)
+        Haptics.trick(judgement)
         if judgement != .fail {
             player.playTrickAnimation(trick)
         }
@@ -95,7 +108,7 @@ final class GameScene: SKScene {
         lastUpdateTime = currentTime
 
         let distance = terrain.metersDescended(atX: player.worldX)
-        forwardSpeed = min(460, 260 + CGFloat(distance) * 0.35) // gentle difficulty ramp
+        forwardSpeed = min(Self.maxForwardSpeed, Self.baseForwardSpeed + CGFloat(distance) * 0.35) // gentle difficulty ramp
 
         let wasAirborne = player.isAirborne
         player.update(dt: dt, forwardSpeed: forwardSpeed, terrain: terrain)
@@ -113,6 +126,9 @@ final class GameScene: SKScene {
             hud.updateCombo(dt: dt)
         } else if wasAirborne {
             hud.endCombo()
+            if !player.isCrashed {
+                Haptics.landing()
+            }
         }
 
         cam.position = CGPoint(x: player.worldX + cameraLeadX, y: player.worldY + size.height * 0.18)
@@ -138,9 +154,7 @@ final class GameScene: SKScene {
             let gap = player.position.y - terrain.height(atX: player.worldX)
             if gap < obstacle.height {
                 player.crash()
-                if SettingsStore.vibrationEnabled {
-                    UINotificationFeedbackGenerator().notificationOccurred(.error)
-                }
+                Haptics.crash()
                 return
             }
         }
