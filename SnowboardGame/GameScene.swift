@@ -15,6 +15,7 @@ final class GameScene: SKScene {
     private let player = Player()
     private let hud = HUD()
     private let cam = SKCameraNode()
+    private let background = BackgroundLayers()
     private let groundNode = SKShapeNode()
 
     private var obstacleNodes: [Int: SKNode] = [:]
@@ -50,6 +51,10 @@ final class GameScene: SKScene {
         hud.attach(to: cam, sceneSize: size)
         hud.setBest(meters: GameState.bestDistanceMeters)
 
+        background.zPosition = -100
+        background.build(seed: CGFloat.random(in: 0..<1000))
+        addChild(background)
+
         groundNode.fillColor = SKColor(red: 0.97, green: 0.98, blue: 1.0, alpha: 1)
         groundNode.strokeColor = SKColor(white: 1, alpha: 0.9)
         groundNode.lineWidth = 3
@@ -69,6 +74,7 @@ final class GameScene: SKScene {
         player.reset(atX: 0, terrain: terrain)
         player.position = CGPoint(x: player.worldX, y: player.worldY)
         cam.position = CGPoint(x: player.worldX + cameraLeadX, y: player.worldY + size.height * 0.18)
+        background.update(cameraPosition: cam.position)
 
         hud.hideGameOver()
         hud.resetForNewRun()
@@ -132,6 +138,7 @@ final class GameScene: SKScene {
         }
 
         cam.position = CGPoint(x: player.worldX + cameraLeadX, y: player.worldY + size.height * 0.18)
+        background.update(cameraPosition: cam.position)
 
         hud.setDistance(meters: distance)
         updateGround()

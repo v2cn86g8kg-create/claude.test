@@ -23,6 +23,7 @@
 		8E845F5DBCCA17543C7655D3 /* ToggleControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C5B16929D4912B5ACC0405B /* ToggleControl.swift */; };
 		6171F626A443446DBC9769EA /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1896F67CAFA7C9B68C65916 /* SettingsStore.swift */; };
 		4EC9764E6663F65AB8C7C5FE /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = E290006F039A2028340E5134 /* Haptics.swift */; };
+		FA5015F61CC2BE0B21B665FF /* BackgroundLayers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24868326B76AC15E3411F97 /* BackgroundLayers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +43,7 @@
 		5C5B16929D4912B5ACC0405B /* ToggleControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleControl.swift; sourceTree = "<group>"; };
 		F1896F67CAFA7C9B68C65916 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		E290006F039A2028340E5134 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		C24868326B76AC15E3411F97 /* BackgroundLayers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundLayers.swift; sourceTree = "<group>"; };
 		E91FEA3CF3123CA5D0822599 /* SnowboardGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SnowboardGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -83,6 +85,7 @@
 				5C5B16929D4912B5ACC0405B /* ToggleControl.swift */,
 				F1896F67CAFA7C9B68C65916 /* SettingsStore.swift */,
 				E290006F039A2028340E5134 /* Haptics.swift */,
+				C24868326B76AC15E3411F97 /* BackgroundLayers.swift */,
 			);
 			path = SnowboardGame;
 			sourceTree = "<group>";
@@ -168,6 +171,7 @@
 				8E845F5DBCCA17543C7655D3 /* ToggleControl.swift in Sources */,
 				6171F626A443446DBC9769EA /* SettingsStore.swift in Sources */,
 				4EC9764E6663F65AB8C7C5FE /* Haptics.swift in Sources */,
+				FA5015F61CC2BE0B21B665FF /* BackgroundLayers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
