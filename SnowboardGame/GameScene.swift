@@ -25,6 +25,9 @@ final class GameScene: SKScene {
     private var isRunning = true
     private var lastUpdateTime: TimeInterval?
     private var runTrickScore = 0
+    /// Brief grace period after a continue so the rider can't instantly re-hit the same
+    /// obstacle that ended the run.
+    private var invulnerabilityRemaining: TimeInterval = 0
 
     /// Speed floor/ceiling for the difficulty ramp - also drives how far left the rider
     /// sits on screen (see `cameraLeadX`).
@@ -96,8 +99,14 @@ final class GameScene: SKScene {
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+
         guard isRunning else {
-            startRun()
+            switch hud.hitTestGameOver(touch.location(in: hud)) {
+            case .restart: startRun()
+            case .continueRun: attemptContinue()
+            case nil: break
+            }
             return
         }
         guard player.isAirborne, let (trick, judgement) = hud.resolveComboTap() else { return }
@@ -125,6 +134,10 @@ final class GameScene: SKScene {
         let wasAirborne = player.isAirborne
         player.update(dt: dt, forwardSpeed: forwardSpeed, terrain: terrain)
         player.position = CGPoint(x: player.worldX, y: player.worldY)
+
+        if invulnerabilityRemaining > 0 {
+            invulnerabilityRemaining -= dt
+        }
 
         // Resolve collisions before touching the combo bar so a mid-air crash this frame
         // (isAirborne flips to false here) is seen by the airborne/wasAirborne check
@@ -159,7 +172,7 @@ final class GameScene: SKScene {
     // MARK: Collision
 
     private func checkObstacleCollision() {
-        guard !player.isCrashed else { return }
+        guard !player.isCrashed, invulnerabilityRemaining <= 0 else { return }
         let range = (player.worldX - 40)...(player.worldX + 40)
         for obstacle in terrain.obstacles(inRange: range) {
             guard player.worldX >= obstacle.minX, player.worldX <= obstacle.maxX else { continue }
@@ -177,7 +190,49 @@ final class GameScene: SKScene {
         isRunning = false
         let isNewRecord = GameState.reportRun(distanceMeters: distanceMeters)
         hud.setBest(meters: GameState.bestDistanceMeters)
-        hud.showGameOver(distanceMeters: distanceMeters, isNewRecord: isNewRecord)
+        CoinWallet.add(CoinWallet.reward(forDistanceMeters: distanceMeters))
+
+        let continueText: String?
+        if ContinueTracker.hasFreeContinueToday() {
+            continueText = PurchaseStore.isAdsRemoved ? "이어하기" : "광고 보고 이어하기"
+        } else {
+            continueText = nil
+        }
+        hud.showGameOver(distanceMeters: distanceMeters, isNewRecord: isNewRecord, continueButtonText: continueText)
+    }
+
+    /// Handles a tap on the game-over "이어하기" button: watches a rewarded ad first
+    /// (skipped entirely if ads are removed), then resumes the run in place. Once-per-
+    /// calendar-day, tracked by `ContinueTracker`.
+    private func attemptContinue() {
+        guard ContinueTracker.hasFreeContinueToday() else { return }
+
+        if PurchaseStore.isAdsRemoved {
+            performContinue()
+        } else {
+            AdsManager.showRewardedAd(in: self) { [weak self] rewarded in
+                guard let self, rewarded else { return }
+                self.performContinue()
+            }
+        }
+    }
+
+    private func performContinue() {
+        ContinueTracker.consumeFreeContinue()
+        isRunning = true
+        lastUpdateTime = nil
+        invulnerabilityRemaining = 1.5
+
+        // Land a little past the crash site so the same obstacle isn't immediately underfoot.
+        player.reset(atX: player.worldX + 70, terrain: terrain)
+        player.position = CGPoint(x: player.worldX, y: player.worldY)
+        cam.position = CGPoint(x: player.worldX + cameraLeadX, y: player.worldY + size.height * 0.18)
+        background.update(cameraPosition: cam.position, tiltX: tilt.tiltX)
+
+        hud.hideGameOver()
+        updateGround()
+        updateObstacles()
+        updateRails()
     }
 
     // MARK: Ground rendering

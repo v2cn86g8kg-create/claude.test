@@ -2,10 +2,12 @@ import SpriteKit
 import UIKit
 
 /// Title/waiting-room screen shown after loading: a "게임 시작" button bottom-center, a
-/// settings button top-right, and the settings popup modal.
+/// settings button top-right, a shop button top-left, and the settings popup modal.
 final class LobbyScene: SKScene {
     private let startButton = SKNode()
     private let settingsButton = SKNode()
+    private let shopButton = SKNode()
+    private let coinLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
     private let settingsPopup = SettingsPopup()
 
     override func didMove(to view: SKView) {
@@ -27,8 +29,15 @@ final class LobbyScene: SKScene {
         bestLabel.position = CGPoint(x: 0, y: size.height * 0.16 - 40)
         addChild(bestLabel)
 
+        coinLabel.fontSize = 16
+        coinLabel.fontColor = SKColor(red: 1.0, green: 0.84, blue: 0.2, alpha: 1)
+        coinLabel.text = "COIN \(CoinWallet.balance)"
+        coinLabel.position = CGPoint(x: 0, y: size.height / 2 - 70)
+        addChild(coinLabel)
+
         setUpStartButton()
         setUpSettingsButton()
+        setUpShopButton()
 
         settingsPopup.zPosition = 500
         addChild(settingsPopup)
@@ -71,6 +80,24 @@ final class LobbyScene: SKScene {
         addChild(settingsButton)
     }
 
+    private func setUpShopButton() {
+        let background = SKShapeNode(rectOf: CGSize(width: 72, height: 40), cornerRadius: 20)
+        background.fillColor = SKColor(white: 0, alpha: 0.35)
+        background.strokeColor = .white
+        background.lineWidth = 2
+        shopButton.addChild(background)
+
+        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        label.text = "상점"
+        label.fontSize = 16
+        label.fontColor = .white
+        label.verticalAlignmentMode = .center
+        shopButton.addChild(label)
+
+        shopButton.position = CGPoint(x: -size.width / 2 + 56, y: size.height / 2 - 60)
+        addChild(shopButton)
+    }
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
 
@@ -84,6 +111,8 @@ final class LobbyScene: SKScene {
             goToGame()
         } else if settingsButton.contains(point) {
             settingsPopup.isHidden = false
+        } else if shopButton.contains(point) {
+            goToShop()
         }
     }
 
@@ -106,5 +135,13 @@ final class LobbyScene: SKScene {
         game.size = size
         game.scaleMode = scaleMode
         view.presentScene(game, transition: SKTransition.doorway(withDuration: 0.5))
+    }
+
+    private func goToShop() {
+        guard let view = view else { return }
+        let shop = ShopScene()
+        shop.size = size
+        shop.scaleMode = scaleMode
+        view.presentScene(shop, transition: SKTransition.fade(withDuration: 0.3))
     }
 }

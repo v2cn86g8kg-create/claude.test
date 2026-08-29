@@ -39,12 +39,10 @@ final class Player: SKNode {
 
     override init() {
         boardNode = SKShapeNode(rectOf: CGSize(width: 34, height: 6), cornerRadius: 3)
-        boardNode.fillColor = .systemYellow
         boardNode.strokeColor = .clear
         boardNode.position = CGPoint(x: 0, y: -10)
 
         bodyNode = SKShapeNode(circleOfRadius: 10)
-        bodyNode.fillColor = .systemRed
         bodyNode.strokeColor = .white
         bodyNode.lineWidth = 1.5
         bodyNode.position = CGPoint(x: 0, y: 2)
@@ -53,6 +51,7 @@ final class Player: SKNode {
         zPosition = 10
         addChild(boardNode)
         addChild(bodyNode)
+        applyCosmetics()
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -70,6 +69,16 @@ final class Player: SKNode {
         zRotation = 0
         alpha = 1
         removeAllActions()
+        applyCosmetics()
+    }
+
+    /// Recolors the board/rider to whatever is currently equipped in the Shop. Called
+    /// on init and on every `reset` (covers both a fresh run and a game-over continue)
+    /// so a skin bought/equipped since the app launched always shows up.
+    private func applyCosmetics() {
+        let item = CosmeticsStore.equippedItem
+        boardNode.fillColor = item.boardColor
+        bodyNode.fillColor = item.bodyColor
     }
 
     /// Called every frame. `forwardSpeed` is the current auto-scroll speed (px/s).

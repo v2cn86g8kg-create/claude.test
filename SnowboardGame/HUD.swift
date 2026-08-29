@@ -13,6 +13,14 @@ final class HUD: SKNode {
     private let gameOverLayer = SKNode()
     private let finalDistanceLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
     private let newRecordLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
+    private let continueButton = SKNode()
+    private let continueLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
+    private let restartButton = SKNode()
+
+    enum GameOverAction {
+        case restart
+        case continueRun
+    }
 
     // MARK: Trick combo bar
 
@@ -213,12 +221,42 @@ final class HUD: SKNode {
         newRecordLabel.position = CGPoint(x: 0, y: -25)
         gameOverLayer.addChild(newRecordLabel)
 
-        let restart = SKLabelNode(fontNamed: "AvenirNext-Bold")
-        restart.text = "TAP TO RESTART"
-        restart.fontSize = 18
-        restart.fontColor = SKColor(white: 1, alpha: 0.85)
-        restart.position = CGPoint(x: 0, y: -70)
-        gameOverLayer.addChild(restart)
+        setUpContinueButton()
+        setUpRestartButton()
+    }
+
+    private func setUpContinueButton() {
+        let background = SKShapeNode(rectOf: CGSize(width: 260, height: 52), cornerRadius: 26)
+        background.fillColor = .systemGreen
+        background.strokeColor = .white
+        background.lineWidth = 2
+        continueButton.addChild(background)
+
+        continueLabel.fontSize = 18
+        continueLabel.fontColor = .white
+        continueLabel.verticalAlignmentMode = .center
+        continueButton.addChild(continueLabel)
+
+        continueButton.position = CGPoint(x: 0, y: -55)
+        gameOverLayer.addChild(continueButton)
+    }
+
+    private func setUpRestartButton() {
+        let background = SKShapeNode(rectOf: CGSize(width: 200, height: 44), cornerRadius: 22)
+        background.fillColor = SKColor(white: 1, alpha: 0.15)
+        background.strokeColor = SKColor(white: 1, alpha: 0.6)
+        background.lineWidth = 1.5
+        restartButton.addChild(background)
+
+        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        label.text = "다시 시작"
+        label.fontSize = 16
+        label.fontColor = SKColor(white: 1, alpha: 0.9)
+        label.verticalAlignmentMode = .center
+        restartButton.addChild(label)
+
+        restartButton.position = CGPoint(x: 0, y: -120)
+        gameOverLayer.addChild(restartButton)
     }
 
     func setDistance(meters: Double) {
@@ -268,9 +306,22 @@ final class HUD: SKNode {
         comboLayer.alpha = 0
     }
 
-    func showGameOver(distanceMeters: Double, isNewRecord: Bool) {
+    /// `continueButtonText` is non-nil when a continue is offered (either "광고 보고
+    /// 이어하기" or, with ads removed, just "이어하기") - nil hides that button entirely,
+    /// leaving only restart.
+    func showGameOver(distanceMeters: Double, isNewRecord: Bool, continueButtonText: String?) {
         finalDistanceLabel.text = "\(Int(distanceMeters)) m"
         newRecordLabel.text = isNewRecord ? "NEW RECORD!" : ""
+
+        if let text = continueButtonText {
+            continueButton.isHidden = false
+            continueLabel.text = text
+            restartButton.position = CGPoint(x: 0, y: -120)
+        } else {
+            continueButton.isHidden = true
+            restartButton.position = CGPoint(x: 0, y: -55)
+        }
+
         gameOverLayer.alpha = 0
         gameOverLayer.run(SKAction.fadeIn(withDuration: 0.3))
     }
@@ -278,5 +329,19 @@ final class HUD: SKNode {
     func hideGameOver() {
         gameOverLayer.removeAllActions()
         gameOverLayer.alpha = 0
+    }
+
+    /// `point` must be in this node's local coordinate space (e.g. `touch.location(in:
+    /// hud)`). Returns nil when the game-over panel isn't showing or the tap missed
+    /// both buttons.
+    func hitTestGameOver(_ point: CGPoint) -> GameOverAction? {
+        guard gameOverLayer.alpha > 0.5 else { return nil }
+        if !restartButton.isHidden, restartButton.contains(convert(point, to: restartButton)) {
+            return .restart
+        }
+        if !continueButton.isHidden, continueButton.contains(convert(point, to: continueButton)) {
+            return .continueRun
+        }
+        return nil
     }
 }
