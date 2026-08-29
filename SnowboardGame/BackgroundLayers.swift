@@ -11,14 +11,18 @@ import SpriteKit
 /// near 0 barely moves (very far away), 1 moves exactly with the world (same as the
 /// actual playable terrain, right up front). Vertically the layer just tracks the
 /// camera directly, so the skyline stays in the same screen band forever instead of
-/// drifting off during a long, endlessly-descending run.
+/// drifting off during a long, endlessly-descending run. `tiltRange` additionally lets
+/// device tilt nudge the layer a little (more for near layers, less for far ones) - the
+/// same depth relationship as scroll parallax, just driven by the gyro instead.
 final class ParallaxLayer: SKNode {
     private let parallaxFactor: CGFloat
     private let repeatWidth: CGFloat
+    private let tiltRange: CGFloat
 
-    init(parallaxFactor: CGFloat, repeatWidth: CGFloat, tiles: [SKNode]) {
+    init(parallaxFactor: CGFloat, repeatWidth: CGFloat, tiltRange: CGFloat, tiles: [SKNode]) {
         self.parallaxFactor = parallaxFactor
         self.repeatWidth = repeatWidth
+        self.tiltRange = tiltRange
         super.init()
         for (index, tile) in tiles.enumerated() {
             tile.position.x = CGFloat(index - 1) * repeatWidth // lay 3 copies side by side
@@ -30,8 +34,9 @@ final class ParallaxLayer: SKNode {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func update(cameraPosition: CGPoint) {
-        let trackedX = cameraPosition.x * (1 - parallaxFactor)
+    /// `tiltX` is the device's smoothed left/right tilt, roughly -1...1 (see `TiltInput`).
+    func update(cameraPosition: CGPoint, tiltX: CGFloat) {
+        let trackedX = cameraPosition.x * (1 - parallaxFactor) + tiltX * tiltRange
         position = CGPoint(x: trackedX.truncatingRemainder(dividingBy: repeatWidth), y: cameraPosition.y)
     }
 }
@@ -48,16 +53,17 @@ final class BackgroundLayers: SKNode {
         let baseline: CGFloat   // screen-space height above center where the ridge sits
         let peak: CGFloat       // how tall the jagged silhouette is
         let freq: CGFloat       // how rugged/frequent the peaks are
+        let tiltRange: CGFloat  // max px this layer shifts from a full device tilt
         let color: SKColor
         let seedOffset: CGFloat
     }
 
     private static let specs: [LayerSpec] = [
-        LayerSpec(parallax: 0.06, repeatWidth: 1500, baseline: 210, peak: 190, freq: 0.55,
+        LayerSpec(parallax: 0.06, repeatWidth: 1500, baseline: 210, peak: 190, freq: 0.55, tiltRange: 8,
                   color: SKColor(red: 0.66, green: 0.75, blue: 0.88, alpha: 0.90), seedOffset: 0.0),
-        LayerSpec(parallax: 0.16, repeatWidth: 1050, baseline: 130, peak: 140, freq: 0.85,
+        LayerSpec(parallax: 0.16, repeatWidth: 1050, baseline: 130, peak: 140, freq: 0.85, tiltRange: 16,
                   color: SKColor(red: 0.50, green: 0.63, blue: 0.78, alpha: 0.95), seedOffset: 3.1),
-        LayerSpec(parallax: 0.34, repeatWidth: 720, baseline: 70, peak: 95, freq: 1.30,
+        LayerSpec(parallax: 0.34, repeatWidth: 720, baseline: 70, peak: 95, freq: 1.30, tiltRange: 28,
                   color: SKColor(red: 0.28, green: 0.45, blue: 0.52, alpha: 1.00), seedOffset: 6.7)
     ]
 
@@ -69,17 +75,18 @@ final class BackgroundLayers: SKNode {
             let tiles = (0..<3).map { _ in
                 makeTile(spec: spec, seed: seed + spec.seedOffset)
             }
-            let layer = ParallaxLayer(parallaxFactor: spec.parallax, repeatWidth: spec.repeatWidth, tiles: tiles)
+            let layer = ParallaxLayer(parallaxFactor: spec.parallax, repeatWidth: spec.repeatWidth, tiltRange: spec.tiltRange, tiles: tiles)
             layer.zPosition = -10 + CGFloat(index) // far -> near, all well behind the ground (zPosition 1)
             addChild(layer)
             layers.append(layer)
         }
     }
 
-    /// Called every frame with the camera's current position.
-    func update(cameraPosition: CGPoint) {
+    /// Called every frame with the camera's current position and the smoothed device
+    /// tilt (-1...1, see `TiltInput`).
+    func update(cameraPosition: CGPoint, tiltX: CGFloat) {
         for layer in layers {
-            layer.update(cameraPosition: cameraPosition)
+            layer.update(cameraPosition: cameraPosition, tiltX: tiltX)
         }
     }
 

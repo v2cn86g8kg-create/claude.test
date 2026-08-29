@@ -24,6 +24,7 @@
 		6171F626A443446DBC9769EA /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1896F67CAFA7C9B68C65916 /* SettingsStore.swift */; };
 		4EC9764E6663F65AB8C7C5FE /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = E290006F039A2028340E5134 /* Haptics.swift */; };
 		FA5015F61CC2BE0B21B665FF /* BackgroundLayers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24868326B76AC15E3411F97 /* BackgroundLayers.swift */; };
+		6CD79949653A9E75EC736D08 /* TiltInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBB63B9B3F68FDE1E94A2CF /* TiltInput.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,7 @@
 		F1896F67CAFA7C9B68C65916 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		E290006F039A2028340E5134 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		C24868326B76AC15E3411F97 /* BackgroundLayers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundLayers.swift; sourceTree = "<group>"; };
+		4FBB63B9B3F68FDE1E94A2CF /* TiltInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiltInput.swift; sourceTree = "<group>"; };
 		E91FEA3CF3123CA5D0822599 /* SnowboardGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SnowboardGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -86,6 +88,7 @@
 				F1896F67CAFA7C9B68C65916 /* SettingsStore.swift */,
 				E290006F039A2028340E5134 /* Haptics.swift */,
 				C24868326B76AC15E3411F97 /* BackgroundLayers.swift */,
+				4FBB63B9B3F68FDE1E94A2CF /* TiltInput.swift */,
 			);
 			path = SnowboardGame;
 			sourceTree = "<group>";
@@ -172,6 +175,7 @@
 				6171F626A443446DBC9769EA /* SettingsStore.swift in Sources */,
 				4EC9764E6663F65AB8C7C5FE /* Haptics.swift in Sources */,
 				FA5015F61CC2BE0B21B665FF /* BackgroundLayers.swift in Sources */,
+				6CD79949653A9E75EC736D08 /* TiltInput.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

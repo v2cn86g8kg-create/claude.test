@@ -16,6 +16,7 @@ final class GameScene: SKScene {
     private let hud = HUD()
     private let cam = SKCameraNode()
     private let background = BackgroundLayers()
+    private let tilt = TiltInput()
     private let groundNode = SKShapeNode()
 
     private var obstacleNodes: [Int: SKNode] = [:]
@@ -54,6 +55,7 @@ final class GameScene: SKScene {
         background.zPosition = -100
         background.build(seed: CGFloat.random(in: 0..<1000))
         addChild(background)
+        tilt.start()
 
         groundNode.fillColor = SKColor(red: 0.97, green: 0.98, blue: 1.0, alpha: 1)
         groundNode.strokeColor = SKColor(white: 1, alpha: 0.9)
@@ -65,6 +67,10 @@ final class GameScene: SKScene {
         startRun()
     }
 
+    override func willMove(from view: SKView) {
+        tilt.stop()
+    }
+
     private func startRun() {
         isRunning = true
         forwardSpeed = Self.baseForwardSpeed
@@ -74,7 +80,7 @@ final class GameScene: SKScene {
         player.reset(atX: 0, terrain: terrain)
         player.position = CGPoint(x: player.worldX, y: player.worldY)
         cam.position = CGPoint(x: player.worldX + cameraLeadX, y: player.worldY + size.height * 0.18)
-        background.update(cameraPosition: cam.position)
+        background.update(cameraPosition: cam.position, tiltX: tilt.tiltX)
 
         hud.hideGameOver()
         hud.resetForNewRun()
@@ -138,7 +144,7 @@ final class GameScene: SKScene {
         }
 
         cam.position = CGPoint(x: player.worldX + cameraLeadX, y: player.worldY + size.height * 0.18)
-        background.update(cameraPosition: cam.position)
+        background.update(cameraPosition: cam.position, tiltX: tilt.tiltX)
 
         hud.setDistance(meters: distance)
         updateGround()
