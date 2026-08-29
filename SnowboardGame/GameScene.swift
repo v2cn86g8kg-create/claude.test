@@ -138,6 +138,9 @@ final class GameScene: SKScene {
             let gap = player.position.y - terrain.height(atX: player.worldX)
             if gap < obstacle.height {
                 player.crash()
+                if SettingsStore.vibrationEnabled {
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                }
                 return
             }
         }

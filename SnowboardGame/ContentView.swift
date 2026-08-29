@@ -2,8 +2,8 @@ import SwiftUI
 import SpriteKit
 
 struct ContentView: View {
-    private let scene: GameScene = {
-        let scene = GameScene()
+    private let scene: LoadingScene = {
+        let scene = LoadingScene()
         scene.size = UIScreen.main.bounds.size
         scene.scaleMode = .resizeFill
         return scene
