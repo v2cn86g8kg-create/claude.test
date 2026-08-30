@@ -37,7 +37,9 @@ final class HUD: SKNode {
     private var comboTime: TimeInterval = 0
 
     private let comboBarHalfWidth: CGFloat = 120
-    private static let stepSpeeds: [CGFloat] = [2.6, 3.3, 4.0]           // rad/s - later steps move faster
+    /// Seconds for the marker to sweep once from the left edge to the right edge before
+    /// snapping back to the left and sweeping again - later steps sweep faster.
+    private static let stepSweepDuration: [TimeInterval] = [1.0, 0.75, 0.55]
     private static let stepGoodFrac: [CGFloat] = [0.46, 0.36, 0.28]      // fraction of half-width
     private static let stepGreatFrac: [CGFloat] = [0.24, 0.19, 0.15]
     private static let stepPerfectFrac: [CGFloat] = [0.10, 0.08, 0.06]
@@ -133,18 +135,25 @@ final class HUD: SKNode {
         comboTime = 0
         comboLayer.removeAllActions()
         comboLayer.alpha = 1
-        comboMarker.position = .zero
+        comboMarker.position = CGPoint(x: -comboBarHalfWidth, y: 0) // starts at the left edge
         layoutComboZones(forStep: 0)
         comboTrickNameLabel.text = AirTrick.allCases[0].shortName
+    }
+
+    /// The marker's current position as a fraction of the bar (-1 = left edge, 0 =
+    /// center, +1 = right edge): a one-way sweep left-to-right that snaps back to the
+    /// left edge and starts over each time it reaches the end, like a radar sweep.
+    private func markerFraction(forStep step: Int, time: TimeInterval) -> CGFloat {
+        let duration = Self.stepSweepDuration[step]
+        let progress = (time / duration).truncatingRemainder(dividingBy: 1.0)
+        return CGFloat(progress) * 2 - 1
     }
 
     /// Called every frame while the combo is active to animate the moving marker.
     func updateCombo(dt: TimeInterval) {
         guard comboActive else { return }
         comboTime += dt
-        let speed = Self.stepSpeeds[comboStep]
-        let frac = CGFloat(sin(comboTime * Double(speed)))
-        comboMarker.position.x = frac * comboBarHalfWidth
+        comboMarker.position.x = markerFraction(forStep: comboStep, time: comboTime) * comboBarHalfWidth
     }
 
     /// Called on a tap while the combo is active. Judges the current step from where the
@@ -154,8 +163,7 @@ final class HUD: SKNode {
     func resolveComboTap() -> (trick: AirTrick, judgement: TrickJudgement)? {
         guard comboActive else { return nil }
 
-        let speed = Self.stepSpeeds[comboStep]
-        let offsetFrac = abs(CGFloat(sin(comboTime * Double(speed))))
+        let offsetFrac = abs(markerFraction(forStep: comboStep, time: comboTime))
         let judgement: TrickJudgement
         if offsetFrac <= Self.stepPerfectFrac[comboStep] {
             judgement = .perfect
