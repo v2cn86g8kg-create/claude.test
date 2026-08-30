@@ -10,7 +10,8 @@ enum Haptics {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
-    /// Fired when the run ends by hitting an obstacle.
+    /// Fired when a run ends - a bad landing where the body hits the snow instead of
+    /// the board.
     static func crash() {
         guard SettingsStore.vibrationEnabled else { return }
         UINotificationFeedbackGenerator().notificationOccurred(.error)

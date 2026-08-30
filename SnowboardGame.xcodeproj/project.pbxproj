@@ -12,7 +12,6 @@
 		1D8E87A3746B121396471682 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = F258E7D2B397B2F3FC9E91B0 /* GameScene.swift */; };
 		39B3B362373E9AC89731C39D /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55EDC58384463CC43D28DF4F /* Player.swift */; };
 		1AAAD6EB221F41D438B1BBF5 /* Terrain.swift in Sources */ = {isa = PBXBuildFile; fileRef = B48F48871EC97CEEBB4294CF /* Terrain.swift */; };
-		F0B63C8C45DAB97A536F93F3 /* Obstacle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CFC6C64C473F89912C9F92 /* Obstacle.swift */; };
 		63D03A1FC32EF276E59710F2 /* Trick.swift in Sources */ = {isa = PBXBuildFile; fileRef = E010391F921140B5643BD36A /* Trick.swift */; };
 		51920A3CB8923D917F40F2C5 /* HUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FA17A73735F9B288F610FD /* HUD.swift */; };
 		C256E3EDEFC9B4F9B10FD549 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE9E56A03557EE62CDDB6D8 /* GameState.swift */; };
@@ -39,7 +38,6 @@
 		F258E7D2B397B2F3FC9E91B0 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		55EDC58384463CC43D28DF4F /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		B48F48871EC97CEEBB4294CF /* Terrain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Terrain.swift; sourceTree = "<group>"; };
-		E0CFC6C64C473F89912C9F92 /* Obstacle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Obstacle.swift; sourceTree = "<group>"; };
 		E010391F921140B5643BD36A /* Trick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trick.swift; sourceTree = "<group>"; };
 		C8FA17A73735F9B288F610FD /* HUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUD.swift; sourceTree = "<group>"; };
 		FDE9E56A03557EE62CDDB6D8 /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
@@ -88,7 +86,6 @@
 				F258E7D2B397B2F3FC9E91B0 /* GameScene.swift */,
 				55EDC58384463CC43D28DF4F /* Player.swift */,
 				B48F48871EC97CEEBB4294CF /* Terrain.swift */,
-				E0CFC6C64C473F89912C9F92 /* Obstacle.swift */,
 				E010391F921140B5643BD36A /* Trick.swift */,
 				C8FA17A73735F9B288F610FD /* HUD.swift */,
 				FDE9E56A03557EE62CDDB6D8 /* GameState.swift */,
@@ -181,7 +178,6 @@
 				1D8E87A3746B121396471682 /* GameScene.swift in Sources */,
 				39B3B362373E9AC89731C39D /* Player.swift in Sources */,
 				1AAAD6EB221F41D438B1BBF5 /* Terrain.swift in Sources */,
-				F0B63C8C45DAB97A536F93F3 /* Obstacle.swift in Sources */,
 				63D03A1FC32EF276E59710F2 /* Trick.swift in Sources */,
 				51920A3CB8923D917F40F2C5 /* HUD.swift in Sources */,
 				C256E3EDEFC9B4F9B10FD549 /* GameState.swift in Sources */,

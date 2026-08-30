@@ -11,11 +11,11 @@ struct Terrain {
     static let pixelsPerMeter: CGFloat = 18
 
     private let phase: CGFloat
-    private let obstacleSeed: UInt64
+    private let chuteSeed: UInt64
 
-    init(phase: CGFloat, obstacleSeed: UInt64) {
+    init(phase: CGFloat, chuteSeed: UInt64) {
         self.phase = phase
-        self.obstacleSeed = obstacleSeed
+        self.chuteSeed = chuteSeed
     }
 
     // MARK: Slope shape
@@ -73,7 +73,7 @@ struct Terrain {
     }
 
     private func chuteHash(_ slot: Int) -> Double {
-        var value = (obstacleSeed ^ 0x9E3779B97F4A7C15) &+ (UInt64(bitPattern: Int64(slot)) &* 2246822519)
+        var value = (chuteSeed ^ 0x9E3779B97F4A7C15) &+ (UInt64(bitPattern: Int64(slot)) &* 2246822519)
         value ^= value >> 15
         value = value &* 2654435761
         value ^= value >> 13
@@ -141,48 +141,6 @@ struct Terrain {
         return c * c * (3 - 2 * c)
     }
 
-    // MARK: Obstacles
-
-    private static let slotWidth: CGFloat = 260
-
-    private func slotIndex(forX x: CGFloat) -> Int {
-        Int(floor(x / Self.slotWidth))
-    }
-
-    /// Deterministic pseudo-random value in [0, 1) for a slot, seeded per-run so every
-    /// playthrough gets a different (but reproducible, and stateless) obstacle layout.
-    private func hash(_ slot: Int) -> Double {
-        var value = obstacleSeed &+ (UInt64(bitPattern: Int64(slot)) &* 2654435761)
-        value ^= value >> 13
-        value = value &* 2246822519
-        value ^= value >> 16
-        return Double(value % 1_000_000) / 1_000_000
-    }
-
-    /// Returns the obstacle for this slot, if the deterministic roll says one exists.
-    /// The first two slots are always kept clear so the player has time to get moving.
-    func obstacle(inSlot slot: Int) -> Obstacle? {
-        guard slot > 1 else { return nil }
-        let roll = hash(slot)
-        guard roll < 0.55 else { return nil }
-
-        let centerX = (CGFloat(slot) + 0.5) * Self.slotWidth
-        let isTree = roll < 0.28
-        let kind: ObstacleKind = isTree ? .tree : .rock
-        let height: CGFloat = isTree
-            ? CGFloat(46 + (roll * 977).truncatingRemainder(dividingBy: 28))  // 46...74
-            : CGFloat(20 + (roll * 613).truncatingRemainder(dividingBy: 22))  // 20...42
-        let width: CGFloat = isTree ? 26 : 34
-        return Obstacle(slotIndex: slot, worldX: centerX, width: width, height: height, kind: kind)
-    }
-
-    /// All obstacles whose bounds fall (even partially) within the given world-x range.
-    func obstacles(inRange range: ClosedRange<CGFloat>) -> [Obstacle] {
-        let lowSlot = slotIndex(forX: range.lowerBound) - 1
-        let highSlot = slotIndex(forX: range.upperBound) + 1
-        guard lowSlot <= highSlot else { return [] }
-        return (lowSlot...highSlot).compactMap { obstacle(inSlot: $0) }
-    }
 }
 
 /// A bounded, self-contained steep drop: a flat "rail" zone where a warning track is

@@ -8,10 +8,11 @@ import UIKit
 /// drops (telegraphed beforehand by a warning rail), and the player can tap freely while
 /// airborne to run a 3-step trick combo (grab -> spin -> backflip) judged by a timing
 /// bar - land the timing to advance the combo, miss it and the combo ends (keeping
-/// whatever was already scored). Riding (or landing) into an obstacle without enough
-/// clearance ends the run.
+/// whatever was already scored). There are no obstacles: the run only ends when a trick
+/// rotation hasn't come back around to upright by the time the rider touches down, so
+/// the body lands instead of the board (see `Player.isBoardLevel`).
 final class GameScene: SKScene {
-    private let terrain = Terrain(phase: CGFloat.random(in: 0..<1000), obstacleSeed: UInt64.random(in: 0..<UInt64.max))
+    private let terrain = Terrain(phase: CGFloat.random(in: 0..<1000), chuteSeed: UInt64.random(in: 0..<UInt64.max))
     private let player = Player()
     private let hud = HUD()
     private let cam = SKCameraNode()
@@ -19,15 +20,11 @@ final class GameScene: SKScene {
     private let tilt = TiltInput()
     private let groundNode = SKShapeNode()
 
-    private var obstacleNodes: [Int: SKNode] = [:]
     private var railNodes: [Int: SKNode] = [:]
     private var forwardSpeed: CGFloat = GameScene.baseForwardSpeed
     private var isRunning = true
     private var lastUpdateTime: TimeInterval?
     private var runTrickScore = 0
-    /// Brief grace period after a continue so the rider can't instantly re-hit the same
-    /// obstacle that ended the run.
-    private var invulnerabilityRemaining: TimeInterval = 0
 
     /// Speed floor/ceiling for the difficulty ramp - also drives how far left the rider
     /// sits on screen (see `cameraLeadX`).
@@ -88,13 +85,10 @@ final class GameScene: SKScene {
         hud.hideGameOver()
         hud.resetForNewRun()
 
-        for (_, node) in obstacleNodes { node.removeFromParent() }
-        obstacleNodes.removeAll()
         for (_, node) in railNodes { node.removeFromParent() }
         railNodes.removeAll()
 
         updateGround()
-        updateObstacles()
         updateRails()
     }
 
@@ -135,15 +129,6 @@ final class GameScene: SKScene {
         player.update(dt: dt, forwardSpeed: forwardSpeed, terrain: terrain)
         player.position = CGPoint(x: player.worldX, y: player.worldY)
 
-        if invulnerabilityRemaining > 0 {
-            invulnerabilityRemaining -= dt
-        }
-
-        // Resolve collisions before touching the combo bar so a mid-air crash this frame
-        // (isAirborne flips to false here) is seen by the airborne/wasAirborne check
-        // below rather than being missed for a frame, which would leave the bar stuck.
-        checkObstacleCollision()
-
         if player.isAirborne && !wasAirborne {
             hud.startCombo()
         }
@@ -151,7 +136,11 @@ final class GameScene: SKScene {
             hud.updateCombo(dt: dt)
         } else if wasAirborne {
             hud.endCombo()
-            if !player.isCrashed {
+            // Player.update already decided, on landing, whether the board was level
+            // enough - a bad landing flips straight to .crashed in that same instant.
+            if player.isCrashed {
+                Haptics.crash()
+            } else {
                 Haptics.landing()
             }
         }
@@ -161,28 +150,10 @@ final class GameScene: SKScene {
 
         hud.setDistance(meters: distance)
         updateGround()
-        updateObstacles()
         updateRails()
 
         if player.isCrashed {
             endRun(distanceMeters: distance)
-        }
-    }
-
-    // MARK: Collision
-
-    private func checkObstacleCollision() {
-        guard !player.isCrashed, invulnerabilityRemaining <= 0 else { return }
-        let range = (player.worldX - 40)...(player.worldX + 40)
-        for obstacle in terrain.obstacles(inRange: range) {
-            guard player.worldX >= obstacle.minX, player.worldX <= obstacle.maxX else { continue }
-            // Clearance above the slope right now (0 while riding on the ground).
-            let gap = player.position.y - terrain.height(atX: player.worldX)
-            if gap < obstacle.height {
-                player.crash()
-                Haptics.crash()
-                return
-            }
         }
     }
 
@@ -221,17 +192,14 @@ final class GameScene: SKScene {
         ContinueTracker.consumeFreeContinue()
         isRunning = true
         lastUpdateTime = nil
-        invulnerabilityRemaining = 1.5
 
-        // Land a little past the crash site so the same obstacle isn't immediately underfoot.
-        player.reset(atX: player.worldX + 70, terrain: terrain)
+        player.reset(atX: player.worldX, terrain: terrain)
         player.position = CGPoint(x: player.worldX, y: player.worldY)
         cam.position = CGPoint(x: player.worldX + cameraLeadX, y: player.worldY + size.height * 0.18)
         background.update(cameraPosition: cam.position, tiltX: tilt.tiltX)
 
         hud.hideGameOver()
         updateGround()
-        updateObstacles()
         updateRails()
     }
 
@@ -259,28 +227,6 @@ final class GameScene: SKScene {
         path.addLine(to: CGPoint(x: firstPoint.x, y: firstPoint.y - 800))
         path.closeSubpath()
         groundNode.path = path
-    }
-
-    // MARK: Obstacle spawning
-
-    private func updateObstacles() {
-        let margin: CGFloat = 80
-        let left = cam.position.x - size.width / 2 - margin
-        let right = cam.position.x + size.width / 2 + margin
-        let visible = terrain.obstacles(inRange: left...right)
-        let visibleSlots = Set(visible.map { $0.slotIndex })
-
-        for slot in Array(obstacleNodes.keys) where !visibleSlots.contains(slot) {
-            obstacleNodes[slot]?.removeFromParent()
-            obstacleNodes.removeValue(forKey: slot)
-        }
-
-        for obstacle in visible where obstacleNodes[obstacle.slotIndex] == nil {
-            let node = obstacle.makeNode()
-            node.position = CGPoint(x: obstacle.worldX, y: terrain.height(atX: obstacle.worldX))
-            addChild(node)
-            obstacleNodes[obstacle.slotIndex] = node
-        }
     }
 
     // MARK: Rail spawning (telegraphs an upcoming steep chute)

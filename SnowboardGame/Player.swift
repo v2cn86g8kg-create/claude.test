@@ -9,7 +9,10 @@ enum PlayerState {
 /// The snowboarder. Owns its own physics/animation state; `GameScene` drives it each
 /// frame via `update(dt:forwardSpeed:terrain:)`. The trick-combo judging itself lives in
 /// `HUD` (it's a UI/timing concern); `playTrickAnimation` here is just the visual spin
-/// GameScene triggers once a combo step has been judged.
+/// GameScene triggers once a combo step has been judged. There are no obstacles - the
+/// only way a run ends is landing with the board not level: if a trick rotation hasn't
+/// come back around to upright by the time the rider touches down, the body hits the
+/// snow instead of the board and it's a crash.
 final class Player: SKNode {
     private(set) var state: PlayerState = .riding
 
@@ -36,6 +39,9 @@ final class Player: SKNode {
     static let launchApexScale: CGFloat = 2.2
     /// Safety cap so an unusually steep patch of terrain can't send the rider absurdly high.
     static let launchApexCap: CGFloat = 190
+    /// How far off upright (either side, in radians) the board can still be at touchdown
+    /// and count as a clean landing. Beyond this, the body lands instead of the board.
+    static let maxSafeLandingTilt: CGFloat = .pi / 4 // 45 degrees
 
     override init() {
         boardNode = SKShapeNode(rectOf: CGSize(width: 34, height: 6), cornerRadius: 3)
@@ -114,14 +120,30 @@ final class Player: SKNode {
             if gap <= 0 && velocityY < 0 {
                 worldY = groundY
                 velocityY = 0
-                removeAllActions()
-                zRotation = 0
-                state = .riding
+
+                if isBoardLevel() {
+                    removeAllActions()
+                    zRotation = 0
+                    state = .riding
+                } else {
+                    crash()
+                }
             }
 
         case .crashed:
             break
         }
+    }
+
+    /// Whether the board is close enough to upright right now to land on cleanly -
+    /// checked against the *current* rotation, wherever an in-flight trick action has
+    /// gotten to, wrapped to the nearest full turn (a completed 360 or a still-spinning
+    /// backflip both count as "upright" the moment they pass back through it).
+    private func isBoardLevel() -> Bool {
+        let fullTurn = CGFloat.pi * 2
+        let normalized = zRotation.truncatingRemainder(dividingBy: fullTurn)
+        let tiltFromLevel = min(abs(normalized), fullTurn - abs(normalized))
+        return tiltFromLevel <= Self.maxSafeLandingTilt
     }
 
     /// Plays the spin/grab flourish for a combo step that was just judged. Purely
