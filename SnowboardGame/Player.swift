@@ -23,9 +23,17 @@ final class Player: SKNode {
 
     private var velocityY: CGFloat = 0
 
+    /// Whether a trick has been started (via `playTrickAnimation`) during the current
+    /// jump. While airborne and this is still false, the rider plays the neutral
+    /// air-balance pose; the instant a trick starts, that pose stops and the trick's own
+    /// spin animation takes over instead.
+    private var hasAttemptedTrick = false
+
     private let spriteNode: SKSpriteNode
     private let rideTextures: [SKTexture]
+    private let airTextures: [SKTexture]
     private static let rideAnimationKey = "ride"
+    private static let airAnimationKey = "air"
 
     static let gravity: CGFloat = -1400 // px/s^2
 
@@ -48,6 +56,11 @@ final class Player: SKNode {
         rideTextures = (0..<4).map { index in
             let texture = SKTexture(imageNamed: "Rider\(index)")
             texture.filteringMode = .nearest // keep the pixel art crisp, not blurred, when scaled
+            return texture
+        }
+        airTextures = (0..<7).map { index in
+            let texture = SKTexture(imageNamed: "RiderAir\(index)")
+            texture.filteringMode = .nearest
             return texture
         }
 
@@ -73,6 +86,7 @@ final class Player: SKNode {
         worldY = terrain.height(atX: x)
         velocityY = 0
         state = .riding
+        hasAttemptedTrick = false
         zRotation = 0
         alpha = 1
         removeAllActions()
@@ -103,6 +117,20 @@ final class Player: SKNode {
         spriteNode.removeAction(forKey: Self.rideAnimationKey)
     }
 
+    /// Loops the neutral air-balance pose. Only ever played while airborne and before a
+    /// trick has been attempted - see `hasAttemptedTrick`.
+    private func startAirAnimation() {
+        guard spriteNode.action(forKey: Self.airAnimationKey) == nil else { return }
+        let animate = SKAction.animate(with: airTextures, timePerFrame: 0.1, resize: false, restore: false)
+        spriteNode.run(SKAction.repeatForever(animate), withKey: Self.airAnimationKey)
+    }
+
+    /// Stops the air-balance loop, freezing on whatever frame it's on - used the instant a
+    /// trick starts (the spin animation takes over) and on landing/crash.
+    private func stopAirAnimation() {
+        spriteNode.removeAction(forKey: Self.airAnimationKey)
+    }
+
     /// Called every frame. `forwardSpeed` is the current auto-scroll speed (px/s).
     func update(dt: TimeInterval, forwardSpeed: CGFloat, terrain: Terrain) {
         guard state != .crashed else { return }
@@ -124,7 +152,9 @@ final class Player: SKNode {
             let extraDrop = (groundY - aheadGroundY) - Terrain.baseSlope * Self.launchLookahead
             if extraDrop > Self.launchThreshold {
                 state = .airborne
+                hasAttemptedTrick = false
                 stopRideAnimation()
+                startAirAnimation()
                 let targetApex = min(extraDrop * Self.launchApexScale, Self.launchApexCap)
                 velocityY = sqrt(2 * abs(Self.gravity) * targetApex)
             }
@@ -140,6 +170,7 @@ final class Player: SKNode {
 
                 if isBoardLevel() {
                     removeAllActions()
+                    stopAirAnimation()
                     zRotation = 0
                     state = .riding
                     startRideAnimation()
@@ -165,8 +196,11 @@ final class Player: SKNode {
     }
 
     /// Plays the spin/grab flourish for a combo step that was just judged. Purely
-    /// cosmetic - the judging itself already happened in `HUD`.
+    /// cosmetic - the judging itself already happened in `HUD`. Marks a trick as attempted
+    /// so the neutral air-balance pose stops looping and the spin drives the visual instead.
     func playTrickAnimation(_ trick: AirTrick) {
+        hasAttemptedTrick = true
+        stopAirAnimation()
         let spin = SKAction.rotate(byAngle: trick.rotation, duration: trick.animationDuration)
         spin.timingMode = .easeInEaseOut
         run(spin)
@@ -177,6 +211,7 @@ final class Player: SKNode {
         velocityY = 0
         removeAllActions()
         stopRideAnimation()
+        stopAirAnimation()
         let tip = SKAction.rotate(toAngle: .pi / 2, duration: 0.25)
         let fade = SKAction.fadeAlpha(to: 0.4, duration: 0.25)
         run(SKAction.group([tip, fade]))

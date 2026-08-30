@@ -34,6 +34,13 @@
 		53207414DAF6AAFECC0C7863 /* Rider1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2F4F2ABF6470E9DE73C4BC66 /* Rider1.png */; };
 		9059132BB90C57792429ADB3 /* Rider2.png in Resources */ = {isa = PBXBuildFile; fileRef = 9476E9AFA78AF2B832D27567 /* Rider2.png */; };
 		870411C00CC94F52CCF64C97 /* Rider3.png in Resources */ = {isa = PBXBuildFile; fileRef = DF8841D40458A081A0BBEFBF /* Rider3.png */; };
+		D70155B20482D0D2F2B6DCB7 /* RiderAir0.png in Resources */ = {isa = PBXBuildFile; fileRef = 4C726AC6D306E1F6CC931C1A /* RiderAir0.png */; };
+		007DBA69C6FD6ABBD815264A /* RiderAir1.png in Resources */ = {isa = PBXBuildFile; fileRef = 43318A8A3260166E15022656 /* RiderAir1.png */; };
+		B0B82D2FCFF5479A1C8881E1 /* RiderAir2.png in Resources */ = {isa = PBXBuildFile; fileRef = DBF5696E272693052CB5A556 /* RiderAir2.png */; };
+		ABBD434772F8130B178A9805 /* RiderAir3.png in Resources */ = {isa = PBXBuildFile; fileRef = 0D3453588019D3F353900E65 /* RiderAir3.png */; };
+		08209044DA0E6340EC926874 /* RiderAir4.png in Resources */ = {isa = PBXBuildFile; fileRef = 1CF7C50CD4EAF94F98279F9F /* RiderAir4.png */; };
+		61EDF83A1F47F76E0EF25CCC /* RiderAir5.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B3E990207D43EF159075DE2 /* RiderAir5.png */; };
+		8D967A56A8543548541B965A /* RiderAir6.png in Resources */ = {isa = PBXBuildFile; fileRef = 4187C71BF887BAC4A4F8C5B6 /* RiderAir6.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -65,6 +72,13 @@
 		2F4F2ABF6470E9DE73C4BC66 /* Rider1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Rider1.png; sourceTree = "<group>"; };
 		9476E9AFA78AF2B832D27567 /* Rider2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Rider2.png; sourceTree = "<group>"; };
 		DF8841D40458A081A0BBEFBF /* Rider3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Rider3.png; sourceTree = "<group>"; };
+		4C726AC6D306E1F6CC931C1A /* RiderAir0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = RiderAir0.png; sourceTree = "<group>"; };
+		43318A8A3260166E15022656 /* RiderAir1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = RiderAir1.png; sourceTree = "<group>"; };
+		DBF5696E272693052CB5A556 /* RiderAir2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = RiderAir2.png; sourceTree = "<group>"; };
+		0D3453588019D3F353900E65 /* RiderAir3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = RiderAir3.png; sourceTree = "<group>"; };
+		1CF7C50CD4EAF94F98279F9F /* RiderAir4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = RiderAir4.png; sourceTree = "<group>"; };
+		8B3E990207D43EF159075DE2 /* RiderAir5.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = RiderAir5.png; sourceTree = "<group>"; };
+		4187C71BF887BAC4A4F8C5B6 /* RiderAir6.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = RiderAir6.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,6 +100,13 @@
 				53207414DAF6AAFECC0C7863 /* Rider1.png in Resources */,
 				9059132BB90C57792429ADB3 /* Rider2.png in Resources */,
 				870411C00CC94F52CCF64C97 /* Rider3.png in Resources */,
+				D70155B20482D0D2F2B6DCB7 /* RiderAir0.png in Resources */,
+				007DBA69C6FD6ABBD815264A /* RiderAir1.png in Resources */,
+				B0B82D2FCFF5479A1C8881E1 /* RiderAir2.png in Resources */,
+				ABBD434772F8130B178A9805 /* RiderAir3.png in Resources */,
+				08209044DA0E6340EC926874 /* RiderAir4.png in Resources */,
+				61EDF83A1F47F76E0EF25CCC /* RiderAir5.png in Resources */,
+				8D967A56A8543548541B965A /* RiderAir6.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +151,13 @@
 				2F4F2ABF6470E9DE73C4BC66 /* Rider1.png */,
 				9476E9AFA78AF2B832D27567 /* Rider2.png */,
 				DF8841D40458A081A0BBEFBF /* Rider3.png */,
+				4C726AC6D306E1F6CC931C1A /* RiderAir0.png */,
+				43318A8A3260166E15022656 /* RiderAir1.png */,
+				DBF5696E272693052CB5A556 /* RiderAir2.png */,
+				0D3453588019D3F353900E65 /* RiderAir3.png */,
+				1CF7C50CD4EAF94F98279F9F /* RiderAir4.png */,
+				8B3E990207D43EF159075DE2 /* RiderAir5.png */,
+				4187C71BF887BAC4A4F8C5B6 /* RiderAir6.png */,
 			);
 			path = SnowboardGame;
 			sourceTree = "<group>";
