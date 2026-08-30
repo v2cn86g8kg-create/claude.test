@@ -30,6 +30,10 @@
 		B8214BBEB2FF553CD58E44A1 /* ContinueTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DB10B7F31E501BB0B48570 /* ContinueTracker.swift */; };
 		347FE09AC10DACBBCA2FD5FD /* AdsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 408D1BE28FAE0864B74B6B4C /* AdsManager.swift */; };
 		8CC0BA68526FC5CE9706697D /* ShopScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4038EFADEB7F0341865C04 /* ShopScene.swift */; };
+		5EFB079936843D53CE16BD75 /* Rider0.png in Resources */ = {isa = PBXBuildFile; fileRef = 6743CDCCBB65D274A98C1855 /* Rider0.png */; };
+		53207414DAF6AAFECC0C7863 /* Rider1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2F4F2ABF6470E9DE73C4BC66 /* Rider1.png */; };
+		9059132BB90C57792429ADB3 /* Rider2.png in Resources */ = {isa = PBXBuildFile; fileRef = 9476E9AFA78AF2B832D27567 /* Rider2.png */; };
+		870411C00CC94F52CCF64C97 /* Rider3.png in Resources */ = {isa = PBXBuildFile; fileRef = DF8841D40458A081A0BBEFBF /* Rider3.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -57,6 +61,10 @@
 		408D1BE28FAE0864B74B6B4C /* AdsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsManager.swift; sourceTree = "<group>"; };
 		2B4038EFADEB7F0341865C04 /* ShopScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopScene.swift; sourceTree = "<group>"; };
 		E91FEA3CF3123CA5D0822599 /* SnowboardGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SnowboardGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6743CDCCBB65D274A98C1855 /* Rider0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Rider0.png; sourceTree = "<group>"; };
+		2F4F2ABF6470E9DE73C4BC66 /* Rider1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Rider1.png; sourceTree = "<group>"; };
+		9476E9AFA78AF2B832D27567 /* Rider2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Rider2.png; sourceTree = "<group>"; };
+		DF8841D40458A081A0BBEFBF /* Rider3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Rider3.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +76,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B6BBB7E0C98BEC7BEDC79805 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5EFB079936843D53CE16BD75 /* Rider0.png in Resources */,
+				53207414DAF6AAFECC0C7863 /* Rider1.png in Resources */,
+				9059132BB90C57792429ADB3 /* Rider2.png in Resources */,
+				870411C00CC94F52CCF64C97 /* Rider3.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXGroup section */
 		64032B568FD83593D3287464 = {
@@ -104,6 +126,10 @@
 				82DB10B7F31E501BB0B48570 /* ContinueTracker.swift */,
 				408D1BE28FAE0864B74B6B4C /* AdsManager.swift */,
 				2B4038EFADEB7F0341865C04 /* ShopScene.swift */,
+				6743CDCCBB65D274A98C1855 /* Rider0.png */,
+				2F4F2ABF6470E9DE73C4BC66 /* Rider1.png */,
+				9476E9AFA78AF2B832D27567 /* Rider2.png */,
+				DF8841D40458A081A0BBEFBF /* Rider3.png */,
 			);
 			path = SnowboardGame;
 			sourceTree = "<group>";
@@ -125,6 +151,7 @@
 			buildPhases = (
 				06CB492056E56E85E4470EC9 /* Sources */,
 				28C62D04FD14BB1B939D8D80 /* Frameworks */,
+				B6BBB7E0C98BEC7BEDC79805 /* Resources */,
 			);
 			buildRules = (
 			);

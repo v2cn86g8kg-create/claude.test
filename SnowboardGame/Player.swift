@@ -23,8 +23,9 @@ final class Player: SKNode {
 
     private var velocityY: CGFloat = 0
 
-    private let bodyNode: SKShapeNode
-    private let boardNode: SKShapeNode
+    private let spriteNode: SKSpriteNode
+    private let rideTextures: [SKTexture]
+    private static let rideAnimationKey = "ride"
 
     static let gravity: CGFloat = -1400 // px/s^2
 
@@ -44,20 +45,20 @@ final class Player: SKNode {
     static let maxSafeLandingTilt: CGFloat = .pi / 4 // 45 degrees
 
     override init() {
-        boardNode = SKShapeNode(rectOf: CGSize(width: 34, height: 6), cornerRadius: 3)
-        boardNode.strokeColor = .clear
-        boardNode.position = CGPoint(x: 0, y: -10)
+        rideTextures = (0..<4).map { index in
+            let texture = SKTexture(imageNamed: "Rider\(index)")
+            texture.filteringMode = .nearest // keep the pixel art crisp, not blurred, when scaled
+            return texture
+        }
 
-        bodyNode = SKShapeNode(circleOfRadius: 10)
-        bodyNode.strokeColor = .white
-        bodyNode.lineWidth = 1.5
-        bodyNode.position = CGPoint(x: 0, y: 2)
+        spriteNode = SKSpriteNode(texture: rideTextures[0])
+        spriteNode.size = CGSize(width: 44, height: 44)
 
         super.init()
         zPosition = 10
-        addChild(boardNode)
-        addChild(bodyNode)
+        addChild(spriteNode)
         applyCosmetics()
+        startRideAnimation()
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -76,15 +77,30 @@ final class Player: SKNode {
         alpha = 1
         removeAllActions()
         applyCosmetics()
+        startRideAnimation()
     }
 
-    /// Recolors the board/rider to whatever is currently equipped in the Shop. Called
-    /// on init and on every `reset` (covers both a fresh run and a game-over continue)
-    /// so a skin bought/equipped since the app launched always shows up.
+    /// Tints the sprite with whatever's currently equipped in the Shop. Called on init
+    /// and on every `reset` (covers both a fresh run and a game-over continue) so a skin
+    /// bought/equipped since the app launched always shows up. A light color blend keeps
+    /// the pixel art readable while still giving each skin a distinct look.
     private func applyCosmetics() {
         let item = CosmeticsStore.equippedItem
-        boardNode.fillColor = item.boardColor
-        bodyNode.fillColor = item.bodyColor
+        spriteNode.color = item.bodyColor
+        spriteNode.colorBlendFactor = 0.3
+    }
+
+    /// Loops the little riding bounce/wobble animation. No-op if it's already playing.
+    private func startRideAnimation() {
+        guard spriteNode.action(forKey: Self.rideAnimationKey) == nil else { return }
+        let animate = SKAction.animate(with: rideTextures, timePerFrame: 0.12, resize: false, restore: false)
+        spriteNode.run(SKAction.repeatForever(animate), withKey: Self.rideAnimationKey)
+    }
+
+    /// Freezes the sprite on whatever frame it's currently on - used while airborne or
+    /// crashed, where the idle riding loop doesn't make sense.
+    private func stopRideAnimation() {
+        spriteNode.removeAction(forKey: Self.rideAnimationKey)
     }
 
     /// Called every frame. `forwardSpeed` is the current auto-scroll speed (px/s).
@@ -108,6 +124,7 @@ final class Player: SKNode {
             let extraDrop = (groundY - aheadGroundY) - Terrain.baseSlope * Self.launchLookahead
             if extraDrop > Self.launchThreshold {
                 state = .airborne
+                stopRideAnimation()
                 let targetApex = min(extraDrop * Self.launchApexScale, Self.launchApexCap)
                 velocityY = sqrt(2 * abs(Self.gravity) * targetApex)
             }
@@ -125,6 +142,7 @@ final class Player: SKNode {
                     removeAllActions()
                     zRotation = 0
                     state = .riding
+                    startRideAnimation()
                 } else {
                     crash()
                 }
@@ -138,7 +156,7 @@ final class Player: SKNode {
     /// Whether the board is close enough to upright right now to land on cleanly -
     /// checked against the *current* rotation, wherever an in-flight trick action has
     /// gotten to, wrapped to the nearest full turn (a completed 360 or a still-spinning
-    /// backflip both count as "upright" the moment they pass back through it).
+    /// backflip both count as "upright" the instant they pass back through it).
     private func isBoardLevel() -> Bool {
         let fullTurn = CGFloat.pi * 2
         let normalized = zRotation.truncatingRemainder(dividingBy: fullTurn)
@@ -158,6 +176,7 @@ final class Player: SKNode {
         state = .crashed
         velocityY = 0
         removeAllActions()
+        stopRideAnimation()
         let tip = SKAction.rotate(toAngle: .pi / 2, duration: 0.25)
         let fade = SKAction.fadeAlpha(to: 0.4, duration: 0.25)
         run(SKAction.group([tip, fade]))
